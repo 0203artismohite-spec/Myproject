@@ -58,6 +58,11 @@ const QuestionnaireModal = ({ category, questions, onSubmit, onClose }) => {
       "How focused are you on your career glow-up? 💼",
       "Rate your stress-busting skills! 🛡️",
       "How balanced is your work-life vibe? ⚖️"
+    ],
+    physical: [
+      "How pumped are you for your daily workouts? 💪",
+      "Rate your overall fitness glow-up! 🏋️‍♀️",
+      "How energized is your body today? ⚡"
     ]
   };
 
