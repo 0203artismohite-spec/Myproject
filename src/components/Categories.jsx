@@ -1,45 +1,83 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-const categories = [
-  {
-    key: 'spiritual',
-    title: '🌿 Spiritual',
-    description: 'Focuses on inner peace & mindfulness',
-    color: 'from-emerald-300 to-cyan-400'
-  },
-  {
-    key: 'motivational',
-    title: '💪 Motivational',
-    description: 'For ambition, self-growth, and courage',
-    color: 'from-orange-300 to-red-400'
-  },
-  {
-    key: 'trendy',
-    title: '💫 Trendy / Picky',
-    description: 'For youth pop-culture & fun tones',
-    color: 'from-pink-300 to-purple-400'
-  },
-  {
-    key: 'emotional',
-    title: '💖 Emotional Awareness',
-    description: 'For emotional stability & resilience',
-    color: 'from-purple-300 to-rose-400'
-  },
-  {
-    key: 'relationship',
-    title: '🤝 Relationship / Social',
-    description: 'For bonding, empathy, and communication',
-    color: 'from-blue-300 to-indigo-400'
-  },
-  {
-    key: 'career',
-    title: '💼 Career / Stress Management',
-    description: 'For goal focus & work-life balance',
-    color: 'from-teal-300 to-cyan-400'
-  }
-];
-
 const Categories = ({ onCategorySelect }) => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/categories');
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching categories:', err);
+        // Fallback to static categories if backend is not available
+        setCategories([
+          {
+            key: 'spiritual',
+            title: '🌿 Spiritual',
+            description: 'Focuses on inner peace & mindfulness',
+            color: 'from-emerald-300 to-cyan-400'
+          },
+          {
+            key: 'motivational',
+            title: '💪 Motivational',
+            description: 'For ambition, self-growth, and courage',
+            color: 'from-orange-300 to-red-400'
+          },
+          {
+            key: 'trendy',
+            title: '💫 Trendy / Picky',
+            description: 'For youth pop-culture & fun tones',
+            color: 'from-pink-300 to-purple-400'
+          },
+          {
+            key: 'emotional',
+            title: '💖 Emotional Awareness',
+            description: 'For emotional stability & resilience',
+            color: 'from-purple-300 to-rose-400'
+          },
+          {
+            key: 'relationship',
+            title: '🤝 Relationship / Social',
+            description: 'For bonding, empathy, and communication',
+            color: 'from-blue-300 to-indigo-400'
+          },
+          {
+            key: 'career',
+            title: '💼 Career / Stress Management',
+            description: 'For goal focus & work-life balance',
+            color: 'from-teal-300 to-cyan-400'
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+  if (loading) {
+    return (
+      <section className="py-16 px-4">
+        <div className="text-center text-white">
+          <p>Loading categories...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    console.warn('Using fallback categories due to error:', error);
+  }
+
   return (
     <section className="py-16 px-4">
       <motion.h2

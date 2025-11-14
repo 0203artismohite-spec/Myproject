@@ -96,14 +96,19 @@ function App() {
     setResponse(null);
   };
 
-  const handleSubmitQuestionnaire = (newRatings) => {
+  const handleSubmitQuestionnaire = (newRatings, aiResponse) => {
     setRatings(newRatings);
-    const averageRating = newRatings.reduce((a, b) => a + b) / newRatings.length;
-    let responseKey;
-    if (averageRating <= 2) responseKey = 'low';
-    else if (averageRating <= 4) responseKey = 'medium';
-    else responseKey = 'high';
-    setResponse(categoriesData[selectedCategory].responses[responseKey]);
+    if (aiResponse) {
+      setResponse(aiResponse);
+    } else {
+      // Fallback to static responses if AI is not available
+      const averageRating = newRatings.reduce((a, b) => a + b) / newRatings.length;
+      let responseKey;
+      if (averageRating <= 2) responseKey = 'low';
+      else if (averageRating <= 4) responseKey = 'medium';
+      else responseKey = 'high';
+      setResponse(categoriesData[selectedCategory].responses[responseKey]);
+    }
     setShowModal(false);
   };
 
