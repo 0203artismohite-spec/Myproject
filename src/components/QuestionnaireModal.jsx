@@ -4,11 +4,38 @@ import { motion, AnimatePresence } from 'framer-motion';
 const QuestionnaireModal = ({ category, questions, onSubmit, onClose }) => {
   const [ratings, setRatings] = useState(Array(questions.length).fill(0));
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [fetchedQuestions, setFetchedQuestions] = useState(questions);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setRatings(Array(questions.length).fill(0));
+    const fetchQuestions = async () => {
+      if (!category) return;
+
+      setLoading(true);
+      try {
+        const response = await fetch(`http://localhost:3001/api/questions/${category}`);
+        if (response.ok) {
+          const data = await response.json();
+          setFetchedQuestions(data.questions);
+          setRatings(Array(data.questions.length).fill(0));
+        } else {
+          // Fallback to provided questions
+          setFetchedQuestions(questions);
+          setRatings(Array(questions.length).fill(0));
+        }
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        // Fallback to provided questions
+        setFetchedQuestions(questions);
+        setRatings(Array(questions.length).fill(0));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
     setCurrentQuestion(0);
-  }, [category, questions.length]);
+  }, [category]);
 
   const handleRatingChange = (rating) => {
     const newRatings = [...ratings];
@@ -20,12 +47,36 @@ const QuestionnaireModal = ({ category, questions, onSubmit, onClose }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (ratings.includes(0)) {
       alert('Please rate all questions.');
       return;
     }
-    onSubmit(ratings);
+
+    try {
+      const response = await fetch('http://localhost:3001/api/answers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          category,
+          ratings
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        onSubmit(ratings, data.answer);
+      } else {
+        // Fallback: just submit ratings without AI answer
+        onSubmit(ratings);
+      }
+    } catch (error) {
+      console.error('Error submitting answers:', error);
+      // Fallback: just submit ratings
+      onSubmit(ratings);
+    }
   };
 
   const trendyQuestions = {
@@ -66,7 +117,34 @@ const QuestionnaireModal = ({ category, questions, onSubmit, onClose }) => {
     ]
   };
 
-  const displayQuestions = trendyQuestions[category] || questions;
+  const displayQuestions = fetchedQuestions || trendyQuestions[category] || questions;
+
+  if (loading) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-8 max-w-lg w-full mx-4 shadow-2xl border border-gray-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center py-8">
+              <p className="text-gray-600">Loading questions...</p>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>
